@@ -48,8 +48,10 @@ const Course = mongoose.model("Course", courseSchema);
 // ── Connect to MongoDB ────────────────────────────────────────────
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log("✅ MongoDB connected");
+    await mongoose.connect(process.env.MONGO_URI, {
+      dbName: "coursedb"
+    });
+    console.log("✅ MongoDB connected to coursedb");
   } catch (err) {
     console.error("❌ MongoDB connection failed:", err.message);
     process.exit(1);
