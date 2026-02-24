@@ -49,7 +49,7 @@ const Course = mongoose.model("Course", courseSchema);
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI, {
-      dbName: "course service"
+      dbName: "coursedb"
     });
     console.log("✅ MongoDB connected to coursedb");
   } catch (err) {
