@@ -1,0 +1,207 @@
+openapi: 3.0.0
+info:
+  title: Course Service API
+  description: Manages course catalog and capacity for the University Enrollment System
+  version: 1.0.0
+
+servers:
+  - url: https://course-service-506720768686.us-central1.run.app
+    description: Production (Google Cloud Run)
+  - url: http://localhost:3000
+    description: Local development
+
+tags:
+  - name: Courses
+    description: Course catalog management
+  - name: Health
+    description: Service health
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      responses:
+        '200':
+          description: Service is running
+          content:
+            application/json:
+              example:
+                status: ok
+                service: course-service
+
+  /courses:
+    get:
+      tags: [Courses]
+      summary: Get all courses
+      responses:
+        '200':
+          description: List of all courses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Course'
+
+    post:
+      tags: [Courses]
+      summary: Create a new course (Admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseInput'
+            example:
+              name: Cloud Computing
+              description: Learn AWS, GCP and Azure
+              capacity: 30
+              credits: 3
+      responses:
+        '201':
+          description: Course created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+        '400':
+          description: Missing required fields
+        '401':
+          description: No token provided
+        '403':
+          description: Admin access required
+
+  /courses/{id}:
+    get:
+      tags: [Courses]
+      summary: Get course by ID (includes live enrollment count)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          example: 64f1a2b3c4d5e6f7a8b9c0d1
+      responses:
+        '200':
+          description: Course details with live enrollment data
+          content:
+            application/json:
+              example:
+                _id: 64f1a2b3c4d5e6f7a8b9c0d1
+                name: Cloud Computing
+                description: Learn AWS, GCP and Azure
+                capacity: 30
+                credits: 3
+                enrolled_count: 12
+                available_seats: 18
+        '404':
+          description: Course not found
+
+    put:
+      tags: [Courses]
+      summary: Update course info (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseUpdate'
+      responses:
+        '200':
+          description: Course updated
+        '403':
+          description: Admin access required
+        '404':
+          description: Course not found
+
+  /courses/{id}/capacity:
+    put:
+      tags: [Courses]
+      summary: Update course capacity (called by Enrollment Service)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+                  enum: [increment, decrement]
+            example:
+              action: decrement
+      responses:
+        '200':
+          description: Capacity updated
+        '400':
+          description: Course is full or invalid action
+        '404':
+          description: Course not found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Course:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        capacity:
+          type: integer
+        credits:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CourseInput:
+      type: object
+      required: [name, capacity, credits]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        capacity:
+          type: integer
+        credits:
+          type: integer
+
+    CourseUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        credits:
+          type: integer
