@@ -42,7 +42,12 @@ const getEnrollmentCount = async (courseId) => {
 const checkEnrollmentStatus = async (studentId, courseId) => {
   try {
     const res = await fetch(
-      `${GATEWAY_URL}/api/enrollments/check?studentId=${studentId}&courseId=${courseId}`
+      `${GATEWAY_URL}/api/enrollments/check?studentId=${studentId}&courseId=${courseId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.SERVICE_TOKEN}`
+        }
+      }
     );
 
     if (!res.ok) return null;
