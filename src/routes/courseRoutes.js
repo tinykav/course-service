@@ -6,7 +6,8 @@ const {
   getCourseById,
   createCourse,
   updateCourse,
-  updateCapacity
+  updateCapacity,
+  checkStudentEnrollment
 } = require("../controllers/courseController");
 
 // Public routes
