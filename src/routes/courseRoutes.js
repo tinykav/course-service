@@ -1,23 +1,24 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { authenticate, adminOnly } = require('../middleware/auth');
+const { authenticate, adminOnly } = require("../middleware/auth");
 const {
   getAllCourses,
   getCourseById,
   createCourse,
   updateCourse,
   updateCapacity
-} = require('../controllers/courseController');
+} = require("../controllers/courseController");
 
 // Public routes
-router.get('/',     getAllCourses);
-router.get('/:id',  getCourseById);
+router.get("/", getAllCourses);
+router.get("/:id", getCourseById);
 
 // Admin only routes
-router.post('/',    authenticate, adminOnly, createCourse);
-router.put('/:id',  authenticate, adminOnly, updateCourse);
+router.post("/", authenticate, adminOnly, createCourse);
+router.put("/:id", authenticate, adminOnly, updateCourse);
 
 // Called by Enrollment Service
-router.put('/:id/capacity', updateCapacity);
+router.put("/:id/capacity", updateCapacity);
 
+router.get("/:courseId/check-student/:studentId", checkStudentEnrollment);
 module.exports = router;

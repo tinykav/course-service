@@ -33,5 +33,25 @@ const getEnrollmentCount = async (courseId) => {
     return null;
   }
 };
+// Member 3 — check if a student is already enrolled in a course
+const checkEnrollmentStatus = async (studentId, courseId) => {
+  try {
+    const res = await fetch(
+      `${GATEWAY_URL}/api/enrollments/check?studentId=${studentId}&courseId=${courseId}`
+    );
 
-module.exports = { validateTokenWithAuthService, getEnrollmentCount };
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.error("❌ Enrollment check failed:", err.message);
+    return null;
+  }
+};
+
+module.exports = {
+  validateTokenWithAuthService,
+  getEnrollmentCount,
+  checkEnrollmentStatus
+};
