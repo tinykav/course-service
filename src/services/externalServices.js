@@ -41,24 +41,26 @@ const getEnrollmentCount = async (courseId) => {
 // Member 3 — check if a student is already enrolled in a course
 const checkEnrollmentStatus = async (studentId, courseId) => {
   try {
-    const res = await fetch(
-      `${GATEWAY_URL}/api/enrollments/check?studentId=${studentId}&courseId=${courseId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.SERVICE_TOKEN}`
-        }
+    const url = `${GATEWAY_URL}/api/enrollments/check?studentId=${studentId}&courseId=${courseId}`;
+
+    console.log("Calling Enrollment Service:", url);
+
+    const res = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${process.env.SERVICE_TOKEN}`
       }
-    );
+    });
 
     if (!res.ok) {
       const text = await res.text();
       console.error("Enrollment service error:", text);
-      throw new Error("Enrollment service responded with error");
+      return null;
     }
 
-    return await res.json();
+    const data = await res.json();
+    return data;
   } catch (err) {
-    console.error("❌ Enrollment check failed:", err);
+    console.error("❌ Enrollment check failed:", err.message);
     return null;
   }
 };
