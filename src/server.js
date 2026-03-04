@@ -55,8 +55,9 @@ const start = async () => {
   return server;
 };
 
-if (require.main === module) {
-  start();
-}
+// if (require.main === module) {
+//   start();
+// }
+start();
 
 module.exports = { app };
