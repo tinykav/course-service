@@ -6,7 +6,11 @@ process.env.MONGO_URI = "mongodb://localhost/test";
 
 jest.mock("../src/services/externalServices", () => ({
   getEnrollmentCount: jest.fn().mockResolvedValue(0),
-  checkEnrollmentStatus: jest.fn().mockResolvedValue({ enrolled: false })
+  checkEnrollmentStatus: jest.fn().mockResolvedValue({
+    isEnrolled: false,
+    status: null,
+    enrollment_id: null
+  })
 }));
 jest.mock("mongoose", () => {
   const actual = jest.requireActual("mongoose");
@@ -18,6 +22,11 @@ const makeToken = (role = "student") =>
 
 const adminToken = makeToken("admin");
 const studentToken = makeToken("student");
+
+// Valid MongoDB ObjectIds for testing
+const VALID_COURSE_ID = "507f1f77bcf86cd799439011";
+const VALID_STUDENT_ID = "507f1f77bcf86cd799439012";
+const INVALID_ID = "invalid-id-123";
 
 let app;
 beforeAll(() => {
@@ -52,8 +61,14 @@ describe("GET /courses/:id", () => {
   it("returns 404 when not found", async () => {
     const Course = require("../src/models/Course");
     Course.findById = jest.fn().mockResolvedValue(null);
-    const res = await request(app).get("/courses/507f1f77bcf86cd799439011");
+    const res = await request(app).get(`/courses/${VALID_COURSE_ID}`);
     expect(res.status).toBe(404);
+  });
+
+  it("returns 400 for invalid course ID format", async () => {
+    const res = await request(app).get(`/courses/${INVALID_ID}`);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("Invalid course ID format");
   });
 });
 
@@ -87,19 +102,46 @@ describe("POST /courses", () => {
 describe("PUT /courses/:id/capacity", () => {
   it("returns 400 for invalid action", async () => {
     const res = await request(app)
-      .put("/courses/507f1f77bcf86cd799439011/capacity")
+      .put(`/courses/${VALID_COURSE_ID}/capacity`)
       .send({ action: "invalid" });
     expect(res.status).toBe(400);
   });
+
+  it("returns 400 for invalid course ID format", async () => {
+    const res = await request(app)
+      .put(`/courses/${INVALID_ID}/capacity`)
+      .send({ action: "increment" });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("Invalid course ID format");
+  });
 });
 
+// ── GET /courses/:courseId/check-student/:studentId ───────────────
 describe("GET /courses/:courseId/check-student/:studentId", () => {
-  it("returns enrollment status", async () => {
+  it("returns enrollment status with valid IDs", async () => {
     const res = await request(app).get(
-      "/courses/507f1f77bcf86cd799439011/check-student/123"
+      `/courses/${VALID_COURSE_ID}/check-student/${VALID_STUDENT_ID}`
     );
 
     expect(res.status).toBe(200);
     expect(res.body.enrolled).toBe(false);
+  });
+
+  it("returns 400 for invalid course ID", async () => {
+    const res = await request(app).get(
+      `/courses/${INVALID_ID}/check-student/${VALID_STUDENT_ID}`
+    );
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("Invalid course ID format");
+  });
+
+  it("returns 400 for invalid student ID", async () => {
+    const res = await request(app).get(
+      `/courses/${VALID_COURSE_ID}/check-student/${INVALID_ID}`
+    );
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe("Invalid student ID format");
   });
 });
