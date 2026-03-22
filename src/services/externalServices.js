@@ -39,6 +39,26 @@ const callGateway = async (endpoint, options = {}) => {
     const sanitizedEndpoint = sanitizeEndpoint(endpoint);
     const url = `${GATEWAY_URL}${sanitizedEndpoint}`;
 
+    // Validate that the constructed URL is safe and points to our gateway
+    try {
+      const parsedUrl = new URL(url);
+      const gatewayUrlObj = new URL(GATEWAY_URL);
+
+      // Ensure the URL uses the same protocol and host as GATEWAY_URL
+      if (
+        parsedUrl.protocol !== gatewayUrlObj.protocol ||
+        parsedUrl.host !== gatewayUrlObj.host
+      ) {
+        console.error(
+          "[Gateway] ❌ Invalid URL - does not match gateway domain"
+        );
+        return null;
+      }
+    } catch (err) {
+      console.error("[Gateway] ❌ Invalid URL format");
+      return null;
+    }
+
     console.log(`[Gateway] 🔄 Making API request`);
 
     const headers = {
