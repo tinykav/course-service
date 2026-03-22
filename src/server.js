@@ -21,11 +21,6 @@ app.use("/courses", courseRoutes);
 
 // ── Diagnostic Routes (for testing gateway integration) ──────────
 app.get("/diagnostics", async (req, res) => {
-  const {
-    checkEnrollmentStatus,
-    getEnrollmentCount
-  } = require("./services/externalServices");
-
   res.json({
     status: "Course Service Running",
     timestamp: new Date().toISOString(),
