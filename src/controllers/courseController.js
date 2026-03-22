@@ -120,7 +120,7 @@ const updateCapacity = async (req, res) => {
   }
 };
 // GET /courses/:courseId/check-student/:studentId
-
+// GET /courses/:courseId/check-student/:studentId
 const checkStudentEnrollment = async (req, res) => {
   try {
     const { courseId, studentId } = req.params;
@@ -128,7 +128,12 @@ const checkStudentEnrollment = async (req, res) => {
 
     if (!status) {
       return res.status(503).json({
-        error: "Enrollment service unavailable"
+        error: "Enrollment service unavailable",
+        debug: {
+          // remove before production
+          gatewayUrl: process.env.GATEWAY_URL,
+          hasToken: !!process.env.SERVICE_TOKEN
+        }
       });
     }
 
