@@ -51,7 +51,10 @@ const callGateway = async (endpoint, options = {}) => {
     }
 
     const data = await res.json();
-    console.log(`[Gateway] ✅ Success:`, JSON.stringify(data).substring(0, 200));
+    console.log(
+      `[Gateway] ✅ Success:`,
+      JSON.stringify(data).substring(0, 200)
+    );
     return data;
   } catch (err) {
     console.error(`[Gateway] 💥 Request failed for ${endpoint}:`, err.message);
@@ -70,12 +73,28 @@ const callGateway = async (endpoint, options = {}) => {
  */
 const validateTokenWithAuthService = async (token) => {
   console.log("[Auth Service] Validating token through gateway...");
-  return await callGateway("/api/auth/validate", {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`
+  try {
+    const url = `${GATEWAY_URL}/api/auth/validate`;
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}` // user token — must NOT be overwritten by SERVICE_TOKEN
+      }
+    });
+    if (!res.ok) {
+      console.error(
+        `[Auth Service] ❌ Validate failed: ${res.status} ${res.statusText}`
+      );
+      return null;
     }
-  });
+    const data = await res.json();
+    console.log("[Auth Service] ✅ Token valid, user:", data);
+    return data;
+  } catch (err) {
+    console.error("[Auth Service] 💥 Request failed:", err.message);
+    return null;
+  }
 };
 
 // ──────────────────────────────────────────────────────────────────
@@ -89,25 +108,34 @@ const validateTokenWithAuthService = async (token) => {
  * @returns {Promise<number|null>} - Count of active enrollments or null
  */
 const getEnrollmentCount = async (courseId) => {
-  console.log(`[Enrollment Service] 📊 Getting enrollment count for course: ${courseId}`);
-  
+  console.log(
+    `[Enrollment Service] 📊 Getting enrollment count for course: ${courseId}`
+  );
+
   const data = await callGateway(`/api/enrollments/course/${courseId}`);
 
   if (!data) {
-    console.error(`[Enrollment Service] ❌ No data returned for course ${courseId}`);
+    console.error(
+      `[Enrollment Service] ❌ No data returned for course ${courseId}`
+    );
     return null;
   }
 
   if (!Array.isArray(data)) {
-    console.error(`[Enrollment Service] ❌ Invalid response format (expected array):`, typeof data);
+    console.error(
+      `[Enrollment Service] ❌ Invalid response format (expected array):`,
+      typeof data
+    );
     return null;
   }
 
   // Count only ACTIVE enrollments (filter out DROPPED, PENDING, etc.)
   const activeCount = data.filter((e) => e.status === "ACTIVE").length;
-  
-  console.log(`[Enrollment Service] ✅ Course ${courseId}: ${activeCount} active / ${data.length} total enrollments`);
-  
+
+  console.log(
+    `[Enrollment Service] ✅ Course ${courseId}: ${activeCount} active / ${data.length} total enrollments`
+  );
+
   return activeCount;
 };
 
@@ -120,8 +148,10 @@ const getEnrollmentCount = async (courseId) => {
  * Returns: { isEnrolled: boolean, status: string|null, enrollment_id: string|null }
  */
 const checkEnrollmentStatus = async (studentId, courseId) => {
-  console.log(`[Enrollment Service] 🔍 Checking enrollment: student=${studentId}, course=${courseId}`);
-  
+  console.log(
+    `[Enrollment Service] 🔍 Checking enrollment: student=${studentId}, course=${courseId}`
+  );
+
   const data = await callGateway(
     `/api/enrollments/check?studentId=${studentId}&courseId=${courseId}`
   );
