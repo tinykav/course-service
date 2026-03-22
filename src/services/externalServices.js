@@ -39,7 +39,7 @@ const callGateway = async (endpoint, options = {}) => {
     const sanitizedEndpoint = sanitizeEndpoint(endpoint);
     const url = `${GATEWAY_URL}${sanitizedEndpoint}`;
 
-    console.log(`[Gateway] 🔄 Calling: ${url}`);
+    console.log(`[Gateway] 🔄 Making API request`);
 
     const headers = {
       "Content-Type": "application/json",
@@ -66,28 +66,22 @@ const callGateway = async (endpoint, options = {}) => {
 
     // Handle 304 Not Modified
     if (res.status === 304) {
-      console.warn(`[Gateway] Got 304 from ${sanitizedEndpoint}`);
+      console.warn(`[Gateway] Got 304 Not Modified response`);
       return null;
     }
 
     // Handle non-OK responses
     if (!res.ok) {
       const text = await res.text();
-      console.error(
-        `[Gateway] ❌ Error response from ${sanitizedEndpoint}:`,
-        text
-      );
+      console.error(`[Gateway] ❌ Error response received`);
       return null;
     }
 
     const data = await res.json();
-    console.log(
-      `[Gateway] ✅ Success:`,
-      JSON.stringify(data).substring(0, 200)
-    );
+    console.log(`[Gateway] ✅ Request successful`);
     return data;
   } catch (err) {
-    console.error(`[Gateway] 💥 Request failed for ${endpoint}:`, err.message);
+    console.error(`[Gateway] 💥 Request failed:`, err.message);
     return null;
   }
 };
@@ -119,7 +113,7 @@ const validateTokenWithAuthService = async (token) => {
       return null;
     }
     const data = await res.json();
-    console.log("[Auth Service] ✅ Token valid, user:", data);
+    console.log("[Auth Service] ✅ Token validated successfully");
     return data;
   } catch (err) {
     console.error("[Auth Service] 💥 Request failed:", err.message);
@@ -140,31 +134,24 @@ const validateTokenWithAuthService = async (token) => {
 const getEnrollmentCount = async (courseId) => {
   // Validate courseId to prevent injection
   if (!isValidObjectId(courseId)) {
-    console.error(
-      `[Enrollment Service] ❌ Invalid courseId format: ${courseId}`
-    );
+    console.error(`[Enrollment Service] ❌ Invalid courseId format`);
     return null;
   }
 
-  console.log(
-    `[Enrollment Service] 📊 Getting enrollment count for course: ${courseId}`
-  );
+  console.log(`[Enrollment Service] 📊 Getting enrollment count`);
 
   // Build endpoint with validated ID
   const endpoint = `/api/enrollments/course/${courseId}`;
   const data = await callGateway(endpoint);
 
   if (!data) {
-    console.error(
-      `[Enrollment Service] ❌ No data returned for course ${courseId}`
-    );
+    console.error(`[Enrollment Service] ❌ No data returned`);
     return null;
   }
 
   if (!Array.isArray(data)) {
     console.error(
-      `[Enrollment Service] ❌ Invalid response format (expected array):`,
-      typeof data
+      `[Enrollment Service] ❌ Invalid response format (expected array)`
     );
     return null;
   }
@@ -173,7 +160,7 @@ const getEnrollmentCount = async (courseId) => {
   const activeCount = data.filter((e) => e.status === "ACTIVE").length;
 
   console.log(
-    `[Enrollment Service] ✅ Course ${courseId}: ${activeCount} active / ${data.length} total enrollments`
+    `[Enrollment Service] ✅ Retrieved enrollment data: ${activeCount} active enrollments`
   );
 
   return activeCount;
@@ -190,22 +177,16 @@ const getEnrollmentCount = async (courseId) => {
 const checkEnrollmentStatus = async (studentId, courseId) => {
   // Validate both IDs to prevent injection
   if (!isValidObjectId(studentId)) {
-    console.error(
-      `[Enrollment Service] ❌ Invalid studentId format: ${studentId}`
-    );
+    console.error(`[Enrollment Service] ❌ Invalid studentId format`);
     return null;
   }
 
   if (!isValidObjectId(courseId)) {
-    console.error(
-      `[Enrollment Service] ❌ Invalid courseId format: ${courseId}`
-    );
+    console.error(`[Enrollment Service] ❌ Invalid courseId format`);
     return null;
   }
 
-  console.log(
-    `[Enrollment Service] 🔍 Checking enrollment: student=${studentId}, course=${courseId}`
-  );
+  console.log(`[Enrollment Service] 🔍 Checking enrollment status`);
 
   // Build endpoint with validated IDs
   const endpoint = `/api/enrollments/check?studentId=${studentId}&courseId=${courseId}`;
@@ -216,7 +197,7 @@ const checkEnrollmentStatus = async (studentId, courseId) => {
     return null;
   }
 
-  console.log(`[Enrollment Service] ✅ Status:`, data);
+  console.log(`[Enrollment Service] ✅ Enrollment status retrieved`);
   return data;
 };
 
